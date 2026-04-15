@@ -8,14 +8,12 @@ SOURCE_FILE = 'raw_data.json'
 OUTPUT_FILE = 'processed_data.csv'
 
 def extract(file_path):
-    """
-    Task 1: Doc du lieu JSON tu file.
-    """
+    """Task 1: Doc du lieu JSON tu file."""
     print(f"Extracting data from {file_path}...")
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        # QUAN TRỌNG: Autograder cần dòng này để tính điểm Logging
+        # Log dung keyword "Extracted X raw records."
         print(f"Extracted {len(data)} raw records.")
         return data
     except FileNotFoundError:
@@ -26,9 +24,7 @@ def extract(file_path):
         return None
 
 def validate(data):
-    """
-    Task 2: Kiem tra chat luong du lieu.
-    """
+    """Task 2: Kiem tra chat luong du lieu."""
     valid_records = []
     error_count = 0
 
@@ -37,7 +33,7 @@ def validate(data):
         price = record.get('price', 0)
         category = record.get('category')
 
-        # Kiểm tra điều kiện loại bỏ
+        # Logic kiem tra
         if price <= 0:
             print(f"  [DROP] Record id={record_id} - price={price} is invalid (price <= 0)")
             error_count += 1
@@ -50,34 +46,30 @@ def validate(data):
 
         valid_records.append(record)
 
-    # QUAN TRỌNG: Phải dùng từ "kept" và "dropped" để máy chấm điểm nhận diện
+    # Log dung keyword "records kept, X records dropped."
     print(f"Validation complete. Valid: {len(valid_records)} records kept, {error_count} records dropped.")
     return valid_records
 
 def transform(data):
-    """
-    Task 3: Ap dung business logic.
-    """
+    """Task 3: Ap dung business logic."""
     if not data:
         return None
 
     df = pd.DataFrame(data)
 
-    # Biến đổi dữ liệu
+    # Thuc hien logic
     df['discounted_price'] = df['price'] * 0.9
     df['category'] = df['category'].astype(str).str.title()
     df['processed_at'] = datetime.datetime.now().isoformat()
 
-    # Log sau khi transform
+    # Log dung keyword "records transformed."
     print(f"Transform complete. {len(df)} records transformed.")
-    
     return df
 
 def load(df, output_path):
-    """
-    Task 4: Luu DataFrame ra file CSV.
-    """
+    """Task 4: Luu DataFrame ra file CSV."""
     df.to_csv(output_path, index=False, encoding='utf-8-sig')
+    # Dung chinh xac "Data saved to..." nhu trong Option 1
     print(f"Data saved to {output_path}")
 
 # ============================================================
@@ -101,6 +93,7 @@ if __name__ == "__main__":
         # 4. Load
         if final_df is not None:
             load(final_df, OUTPUT_FILE)
+            # Log cuoi cung phai khop voi logic Pipeline completed!
             print(f"\nPipeline completed! {len(final_df)} records saved.")
         else:
             print("\nTransform returned None.")
