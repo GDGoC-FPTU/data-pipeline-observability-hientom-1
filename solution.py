@@ -7,70 +7,91 @@ import datetime
 SOURCE_FILE = 'raw_data.json'
 OUTPUT_FILE = 'processed_data.csv'
 
+
 def extract(file_path):
-    """Task 1: Doc du lieu JSON tu file."""
+    """
+    Task 1: Doc du lieu JSON tu file.
+
+    Goi y:
+       - Dung json.load() de doc file JSON
+       - Xu ly truong hop file khong ton tai (FileNotFoundError)
+
+    Returns:
+        list: Danh sach cac records (dictionaries)
+    """
     print(f"Extracting data from {file_path}...")
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        # Log dung keyword "Extracted X raw records."
-        print(f"Extracted {len(data)} raw records.")
-        return data
-    except FileNotFoundError:
-        print(f"Error: {file_path} not found.")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error: Failed to decode JSON.")
-        return None
+    # code doc file JSON
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    return data
+
 
 def validate(data):
-    """Task 2: Kiem tra chat luong du lieu."""
+    """
+    Task 2: Kiem tra chat luong du lieu.
+
+    Quy tac validation:
+       - Price phai > 0 (loai bo gia am hoac bang 0)
+       - Category khong duoc rong
+
+    Goi y:
+       - Dung record.get('price', 0) de lay gia
+       - Dung record.get('category') de kiem tra category
+       - In ra so luong record hop le va khong hop le
+
+    Returns:
+        list: Danh sach cac records hop le
+    """
     valid_records = []
     error_count = 0
 
     for record in data:
-        record_id = record.get('id', 'Unknown')
         price = record.get('price', 0)
-        category = record.get('category')
-
-        # Logic kiem tra
-        if price <= 0:
-            print(f"  [DROP] Record id={record_id} - price={price} is invalid (price <= 0)")
+        category = record.get('category', '')
+        if price <= 0 or not category:
             error_count += 1
-            continue
-            
-        if not category or not str(category).strip():
-            print(f"  [DROP] Record id={record_id} - category is empty")
-            error_count += 1
-            continue
+        else:
+            valid_records.append(record)
 
-        valid_records.append(record)
-
-    # Log dung keyword "records kept, X records dropped."
-    print(f"Validation complete. Valid: {len(valid_records)} records kept, {error_count} records dropped.")
+    print(f"Validation complete. {len(valid_records)} valid records kept, {error_count} dropped.")
     return valid_records
 
+
 def transform(data):
-    """Task 3: Ap dung business logic."""
-    if not data:
-        return None
+    """
+    Task 3: Ap dung business logic.
 
+    Yeu cau:
+       - Tinh discounted_price = price * 0.9 (giam 10%)
+       - Chuan hoa category thanh Title Case (vi du: "electronics" -> "Electronics")
+       - Them cot processed_at = timestamp hien tai
+
+    Goi y:
+       - Dung pd.DataFrame(data) de tao DataFrame
+       - df['discounted_price'] = df['price'] * 0.9
+       - df['category'] = df['category'].str.title()
+       - df['processed_at'] = datetime.datetime.now().isoformat()
+
+    Returns:
+        pd.DataFrame: DataFrame da duoc transform
+    """
     df = pd.DataFrame(data)
-
-    # Thuc hien logic
     df['discounted_price'] = df['price'] * 0.9
-    df['category'] = df['category'].astype(str).str.title()
+    df['category'] = df['category'].str.title()
     df['processed_at'] = datetime.datetime.now().isoformat()
-
-    # Log dung keyword "records transformed."
-    print(f"Transform complete. {len(df)} records transformed.")
     return df
 
+
 def load(df, output_path):
-    """Task 4: Luu DataFrame ra file CSV."""
-    df.to_csv(output_path, index=False, encoding='utf-8-sig')
-    # Dung chinh xac "Data saved to..." nhu trong Option 1
+    """
+    Task 4: Luu DataFrame ra file CSV.
+
+    Goi y:
+       - df.to_csv(output_path, index=False)
+    """
+    df.to_csv(output_path, index=False)
     print(f"Data saved to {output_path}")
+
 
 # ============================================================
 # MAIN PIPELINE
@@ -93,9 +114,8 @@ if __name__ == "__main__":
         # 4. Load
         if final_df is not None:
             load(final_df, OUTPUT_FILE)
-            # Log cuoi cung phai khop voi logic Pipeline completed!
             print(f"\nPipeline completed! {len(final_df)} records saved.")
         else:
-            print("\nTransform returned None.")
+            print("\nTransform returned None. Check your transform() function.")
     else:
         print("\nPipeline aborted: No data extracted.")
